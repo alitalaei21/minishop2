@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
+import os
 from datetime import timedelta
 
 import psycopg2
@@ -21,12 +22,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-j!7wy=5@e41=v$v+0vb6!#d$^t*s&cny4_s1=s%f#yeo!z&=%9'
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "test")
+DEBUG = os.getenv("DJANGO_DEBUG", True)
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 
 ALLOWED_HOSTS = []
+DJANGO_LOGLEVEL = os.getenv("DJANGO_LOGLEVEL", "INFO")
+
 
 
 # Application definition
@@ -89,12 +91,12 @@ WSGI_APPLICATION = 'minishop.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres', # database name
-        'USER': 'postgres',
-        'PASSWORD': 'alitalaei21',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'ENGINE': os.getenv("DATABASE_ENGINE", "django.db.backends.postgresql"),
+        'NAME': os.getenv("DATABASE_NAME", "postgres"), #
+        'USER': os.getenv("DATABASE_USER", "postgres"),
+        'PASSWORD': os.getenv("DATABASE_PASSWORD", "alitalaei21"),
+        'HOST': os.getenv("DATABASE_HOST", "localhost"),
+        'PORT': os.getenv("DATABASE_PORT", "5432"),
     }
 }
 # from decouple import config
