@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Google Sign-In</title>
+</head>
+<body>
+    <div id="google-signin-button"></div>
+    <script>
+    // your javascript code from the previous response goes here.
+    function initGoogleSignIn() {
+      gapi.load('auth2', function() {
+        gapi.auth2.init({
+          client_id: '169661085813-fodgja7qj5evjpr1lql3ga77c0aqbn3a.apps.googleusercontent.com',
+        });
+        gapi.signin2.render('google-signin-button', {
+          'scope': 'profile email',
+          'width': 240,
+          'height': 50,
+          'longtitle': true,
+          'theme': 'dark',
+          'onsuccess': onSignIn,
+          'onfailure': onFailure,
+        });
+      });
+    }
+
+    function onSignIn(googleUser) {
+      const id_token = googleUser.getAuthResponse().id_token;
+      fetch('/auth/convert-token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `grant_type=convert_token&client_id=169661085813-fodgja7qj5evjpr1lql3ga77c0aqbn3a.apps.googleusercontent.com&backend=google-oauth2&token=${id_token}`,
+      })
+        .then(response => response.json())
+        .then(data => {
+          // Store the tokens securely (e.g., localStorage, secure cookies)
+          localStorage.setItem('access_token', data.access_token);
+          localStorage.setItem('refresh_token', data.refresh_token);
+
+          // Redirect or update UI to indicate successful login
+          console.log('Login successful:', data);
+          // Example: Redirect to a protected route
+          //window.location.href = '/dashboard';
+        })
+        .catch(error => {
+          console.error('Login failed:', error);
+          // Handle login failure (e.g., display an error message)
+        });
+    }
+
+    function onFailure(error) {
+      console.error('Google Sign-In failed:', error);
+      // Handle sign-in failure (e.g., display an error message)
+    }
+
+    // Load the Google Sign-In library
+    function loadGoogleSignInScript() {
+      const script = document.createElement('script');
+      script.src = 'https://apis.google.com/js/platform.js';
+      script.onload = initGoogleSignIn;
+      document.body.appendChild(script);
+    }
+
+    // Call the function to load the script when the page loads
+    loadGoogleSignInScript();
+    </script>
+</body>
+</html>
