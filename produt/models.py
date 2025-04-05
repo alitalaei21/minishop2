@@ -8,7 +8,8 @@ def category_image_path(instance, filename):
 
 def product_image_path(instance, filename):
     return "product/images/{}/{}".format(instance.title, filename)
-
+def banner_image_path(instance, filename):
+    return "banner/images/{}/{}".format(instance.name, filename)
 class Category(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE,related_name='category')
     category_id = models.AutoField(primary_key=True)
@@ -29,6 +30,7 @@ class Product(models.Model):
     price = models.FloatField()
     stock = models.IntegerField(default=0)
     category = models.ForeignKey(Category, on_delete=models.CASCADE,related_name='products')
+    Special_sale = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     uploaded_at = models.DateTimeField(auto_now=True)
     def __str__(self):
@@ -63,3 +65,9 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.quantity} x {self.product}"
+
+class Baner(models.Model):
+    name = models.CharField(max_length=100)
+    image = models.ImageField(upload_to=banner_image_path)
+    def __str__(self):
+        return self.name
