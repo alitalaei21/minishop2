@@ -6,7 +6,10 @@ from produt.models import Product, Category, OrderItem, Order, Baner
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ('name','image','price','description','category',)
+        fields ="__all__"
+
+    def get_discounted_price(self, obj):
+        return obj.discounted_price()
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category

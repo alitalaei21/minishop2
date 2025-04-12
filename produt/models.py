@@ -31,8 +31,13 @@ class Product(models.Model):
     stock = models.IntegerField(default=0)
     category = models.ForeignKey(Category, on_delete=models.CASCADE,related_name='products')
     special_sale = models.BooleanField(default=False)
+    discount = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     uploaded_at = models.DateTimeField(auto_now=True)
+    def discount_price(self):
+        if(self.discount > 0):
+            return self.price * (1-self.discount/100)
+        return self.price
     def __str__(self):
         return self.name
 
