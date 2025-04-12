@@ -6,9 +6,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from produt.models import Category, Product, OrderItem, Order
+from produt.models import Category, Product, OrderItem, Order, Baner
 from produt.permissions import ModelViewSetsPermission, IsOwnerAuth
-from produt.serializers import CategorySerializer, ProductSerializer, OrderItemSerializer, OrderSerializer
+from produt.serializers import CategorySerializer, ProductSerializer, OrderItemSerializer, OrderSerializer, \
+    BanerSerializer
 
 
 # Create your views here.
@@ -82,6 +83,18 @@ class SpecialSaleView(APIView):
         products = Product.objects.filter(special_sale=True)
         serializer_class = ProductSerializer(products,many=True)
         return Response(serializer_class.data)
+class BanerviewListApi(generics.ListAPIView):
+    queryset = Baner.objects.all()
+    serializer_class = SpecialSaleView
+
+class BanerCreateApi(generics.CreateAPIView):
+    queryset = Baner.objects.all()
+    serializer_class = BanerSerializer
+    permission_classes = [IsOwnerAuth,]
+class BanerDetailView(generics.DestroyAPIView):
+    queryset = Baner.objects.all()
+    serializer_class = BanerSerializer
+    permission_classes = [IsOwnerAuth,]
 
 
 

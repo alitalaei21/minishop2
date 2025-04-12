@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from produt.models import Product, Category, OrderItem, Order
+from produt.models import Product, Category, OrderItem, Order, Baner
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -30,4 +30,7 @@ class OrderSerializer(serializers.ModelSerializer):
             OrderItem.objects.create(order=order, **item_data)
         order.calculate_total_price()
         return order
-
+class BanerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Baner
+        fields = "__all__"

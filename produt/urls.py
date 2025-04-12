@@ -2,7 +2,8 @@ from django.urls import path
 
 from produt.views import Page, CategoryListApi, CategoryCreateApi, CategoryDetailView, CategoryDetailApiView, \
     ProductCreateApi, ProductDetailView, ProductListApi, ProductDetailApiView, OrderItemListCreateView, \
-    OrderItemDetailView, OrderListCreateView, OrderDetailView, SpecialSaleView
+    OrderItemDetailView, OrderListCreateView, OrderDetailView, SpecialSaleView, BanerviewListApi, BanerCreateApi, \
+    BanerDetailView
 
 urlpatterns = [
 
@@ -20,6 +21,9 @@ urlpatterns = [
     path('orders/', OrderListCreateView.as_view(), name='order-list-create'),
     path('orders/<int:pk>/', OrderDetailView.as_view(), name='order-detail'),
     path('specialsale/',SpecialSaleView.as_view(), name='specialsale'),
+    path('Baner/list/',BanerviewListApi.as_view(), name='banerview-list'),
+    path('Baner/create/',BanerCreateApi.as_view(), name='banerview-list'),
+    path('Baner/delete/',BanerDetailView.as_view(), name='banerview-list'),
 
 
 ]
