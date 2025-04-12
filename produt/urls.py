@@ -2,7 +2,7 @@ from django.urls import path
 
 from produt.views import Page, CategoryListApi, CategoryCreateApi, CategoryDetailView, CategoryDetailApiView, \
     ProductCreateApi, ProductDetailView, ProductListApi, ProductDetailApiView, OrderItemListCreateView, \
-    OrderItemDetailView, OrderListCreateView, OrderDetailView
+    OrderItemDetailView, OrderListCreateView, OrderDetailView, SpecialSaleView
 
 urlpatterns = [
 
@@ -19,6 +19,7 @@ urlpatterns = [
     path('order-items/<int:pk>/', OrderItemDetailView.as_view(), name='orderitem-detail'),
     path('orders/', OrderListCreateView.as_view(), name='order-list-create'),
     path('orders/<int:pk>/', OrderDetailView.as_view(), name='order-detail'),
+    path('specialsale/',SpecialSaleView.as_view(), name='specialsale'),
 
 
 ]

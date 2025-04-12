@@ -30,7 +30,7 @@ class Product(models.Model):
     price = models.FloatField()
     stock = models.IntegerField(default=0)
     category = models.ForeignKey(Category, on_delete=models.CASCADE,related_name='products')
-    Special_sale = models.BooleanField(default=False)
+    special_sale = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     uploaded_at = models.DateTimeField(auto_now=True)
     def __str__(self):

@@ -77,7 +77,11 @@ class OrderDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
 
-
+class SpecialSaleView(APIView):
+    def get(self, request, pk):
+        products = Product.objects.filter(special_sale=True)
+        serializer_class = ProductSerializer(products,many=True)
+        return Response(serializer_class.data)
 
 
 
