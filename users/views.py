@@ -1,10 +1,12 @@
 from django.contrib.auth import get_user_model
 from django.core.serializers import serialize
 from django.shortcuts import render
+from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
+
 
 from users import serializers
 from users.models import OtpRequest
