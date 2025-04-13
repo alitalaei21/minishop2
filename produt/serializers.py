@@ -1,15 +1,29 @@
 from rest_framework import serializers
 
 from produt.models import Product, Category, OrderItem, Order, Baner
-
-
+from goldapi.goldapifun import get_gold_price
 class ProductSerializer(serializers.ModelSerializer):
+    final_price = serializers.SerializerMethodField()
     class Meta:
         model = Product
-        fields ="__all__"
+        fields =('product_id','name','description','title','image','weight','labor_wage','stock','category','special_sale','discount','final_price')
+    def gold_api_price(self ):
+        try:
+            response = get_gold_price()
+            return float(response)
+        except:
+            return 0
+    def get_final_price(self, obj):
+        price_gold = self.gold_api_price()
+        gold_price = (price_gold * obj.weight) - obj.labor_wage
+        if obj.discount > 0 :
+            discount = gold_price * (obj.discount / 100)
+            return int(gold_price - discount)
+        return int(gold_price)
 
-    def get_discounted_price(self, obj):
-        return obj.discounted_price()
+
+    # def get_discounted_price(self, obj):
+    #     return obj.discounted_price()
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category

@@ -45,12 +45,14 @@ services:
       - .env
   goldprice-api:
     build:
-      context: ./gold-api/gold-api-kt-backend
+      context: goldapi/gold-api-kt-backend
       dockerfile: Dockerfile
     container_name: goldprice-api
+    profiles:
+      - donotstart
     restart: unless-stopped
     volumes:
-      - ./gold-api/gold-api-kt-backend/price_data:/app/price_data
+      - ./goldapi/goldapi-kt-backend/price_data:/app/price_data
 
 
 volumes:

@@ -52,7 +52,7 @@ INSTALLED_APPS = [
     'users',
     'decouple',
     'psycopg2',
-
+    'goldapi',
     'oauth2_provider',
     'social_django',
     'drf_social_oauth2',
