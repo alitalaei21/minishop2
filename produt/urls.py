@@ -6,7 +6,6 @@ from produt.views import Page, CategoryListApi, CategoryCreateApi, CategoryDetai
     BanerDetailView
 
 urlpatterns = [
-
     path('', Page.as_view(), name='page'),
     path('category/list/',CategoryListApi.as_view(), name='category-list'),
     path('category/create/',CategoryCreateApi.as_view(), name='category-create'),

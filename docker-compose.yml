@@ -12,6 +12,13 @@ services:
       - pgdata:/var/lib/postgresql/data
     env_file:
       - .env
+  redis:
+    image: redis:7.4.2-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
   django:
     build: .
     volumes:
@@ -21,6 +28,7 @@ services:
       - "8000:8000"
     depends_on:
       - db
+      - redis
     environment:
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
       DEBUG: ${DEBUG}
@@ -29,12 +37,22 @@ services:
       DATABASE_ENGINE: ${DATABASE_ENGINE}
       DATABASE_NAME: ${DATABASE_NAME}
       DATABASE_USER: ${DATABASE_USER}
-
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
       DATABASE_HOST: ${DATABASE_HOST}
       DATABASE_PORT: ${DATABASE_PORT}
+      REDIS_URL: "redis://redis:6379/0"
     env_file:
       - .env
+  goldprice-api:
+    build:
+      context: ./gold-api/gold-api-kt-backend
+      dockerfile: Dockerfile
+    container_name: goldprice-api
+    restart: unless-stopped
+    volumes:
+      - ./gold-api/gold-api-kt-backend/price_data:/app/price_data
+
 
 volumes:
   pgdata:
+  redisdata:

@@ -105,6 +105,15 @@ DATABASES = {
         'PORT': os.getenv("DATABASE_PORT", "5432"),
     }
 }
+
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379",
+    }
+}
+
 # from decouple import config
 # DATABASES = {
 #     "default": {
