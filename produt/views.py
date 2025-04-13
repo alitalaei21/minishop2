@@ -6,7 +6,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from produt.filters import ProductFilter
 from produt.models import Category, Product, OrderItem, Order, Baner
 from produt.permissions import ModelViewSetsPermission, IsOwnerAuth
 from produt.serializers import CategorySerializer, ProductSerializer, OrderItemSerializer, OrderSerializer, \
@@ -99,11 +98,27 @@ class BanerDetailView(generics.DestroyAPIView):
 
 
 class ProductFilterListApi(generics.ListAPIView):
-    queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    filter_backends = [DjangoFilterBackend]
-    filterset_class = ProductFilter
 
+    def get_queryset(self):
+        queryset = Product.objects.all()
+        min_price = self.request.query_params.get('min_price')
+        max_price = self.request.query_params.get('max_price')
+
+        filtered_products = []
+
+        for product in queryset:
+            serializer = ProductSerializer(product)
+            final_price = serializer.data['final_price']
+            if final_price is not None:
+                final_price = int(final_price)
+                if min_price and final_price < int(min_price):
+                    continue
+                if max_price and final_price > int(max_price):
+                    continue
+                filtered_products.append(product)
+
+        return filtered_products
 
 
 
