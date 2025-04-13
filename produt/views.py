@@ -1,4 +1,4 @@
-
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, status, generics
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from produt.filters import ProductFilter
 from produt.models import Category, Product, OrderItem, Order, Baner
 from produt.permissions import ModelViewSetsPermission, IsOwnerAuth
 from produt.serializers import CategorySerializer, ProductSerializer, OrderItemSerializer, OrderSerializer, \
@@ -97,7 +98,11 @@ class BanerDetailView(generics.DestroyAPIView):
     permission_classes = [IsOwnerAuth,]
 
 
-
+class ProductFilterListApi(generics.ListAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = ProductFilter
 
 
 
