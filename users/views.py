@@ -14,7 +14,7 @@ from users.models import OtpRequest
 
 # Create your views here.
 class OtpView(APIView):
-    def get(self, request):
+    def post(self, request):
         serializer = serializers.RequestOtpSerializer(data=request.query_params)
         if serializer.is_valid():
             data = serializer.validated_data
@@ -26,6 +26,8 @@ class OtpView(APIView):
                 return Response( status=status.HTTP_500_INTERNAL_SERVER_ERROR,data=serializer.errors)
         else:
             return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class LoginView(APIView):
     def post(self, request):
         serializer = serializers.VerifyOtpRequestSerializer(data=request.data)
         if serializer.is_valid():
