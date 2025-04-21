@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from produt.models import Product, Category, OrderItem, Order, Baner
+from produt.models import Product, Category, OrderItem, Order, Baner, CartItem, Cart
 from goldapi.goldapifun import get_gold_price
 import logging
 
@@ -63,3 +63,31 @@ class BanerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Baner
         fields = "__all__"
+
+
+class CartItemSerializer(serializers.ModelSerializer):
+    Product = ProductSerializer(read_only=True)
+    class Meta:
+        model = CartItem
+        fields = ['id','product','quantity']
+class AddCartItemSerializer(serializers.Serializer):
+    product_id = serializers.IntegerField(write_only=True)
+    class Meta:
+        model = CartItem
+        fields = ['product_id','quantity']
+    def create(self, validated_data):
+        cart = self.context['cart']
+        product_id = validated_data['product_id']
+        quantity = validated_data['quantity']
+        item, created = CartItem.objects.get_or_create(cart=cart,product=product_id)
+        if not created:
+            item.quantity += quantity
+            item.save()
+        return item
+
+class CartSerializer(serializers.ModelSerializer):
+    items = CartItemSerializer(many=True)
+
+    class Meta:
+        model = Cart
+        fields = ['id', 'created_at', 'items']

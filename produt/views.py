@@ -6,10 +6,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from produt.models import Category, Product, OrderItem, Order, Baner
+from produt.models import Category, Product, OrderItem, Order, Baner, Cart
 from produt.permissions import ModelViewSetsPermission, IsOwnerAuth
 from produt.serializers import CategorySerializer, ProductSerializer, OrderItemSerializer, OrderSerializer, \
-    BanerSerializer
+    BanerSerializer, CartSerializer, CartItemSerializer
 
 
 # Create your views here.
@@ -130,6 +130,19 @@ class ProductCategoryFilterListApi(generics.ListAPIView):
             queryset = queryset.filter(category__name__icontains=category_name)
         return queryset
 
+class CartView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        cart,_ = Cart.objects.get_or_create(user=request.user)
+        serializer = CartSerializer(cart)
+        return Response(serializer.data)
+    def post(self, request):
+        cart,_ = Cart.objects.get_or_create(user=request.user)
+        serializer = CartItemSerializer(data=request.data,context={'cart':cart})
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "محصول به سبد اضافه شد"}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 
