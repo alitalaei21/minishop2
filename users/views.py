@@ -1,4 +1,4 @@
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, authenticate
 from django.core.serializers import serialize
 from django.shortcuts import render
 from rest_framework.permissions import IsAuthenticated
@@ -10,6 +10,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from users import serializers
 from users.models import OtpRequest
+from users.serializers import ChangePasswordSerializer,EmailSignupSerializer
 
 
 # Create your views here.
@@ -91,3 +92,24 @@ class ChangePasswordView(APIView):
             serializer.save()
             return Response({"message": "رمز عبور با موفقیت تغییر یافت"})
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class EmailSingupView(APIView):
+    def post(self, request):
+        serializers = EmailSignupSerializer(data=request.data)
+        if serializers.is_valid():
+            serializers.save()
+            return Response({'message': 'ثبت‌نام با موفقیت انجام شد'})
+        return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class EmailLoginView(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+        password = request.data.get('password')
+        user = authenticate(request,username=email,password=password)
+        if user is not None:
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token)
+            })
+        return Response({'error': 'اطلاعات نامعتبر'}, status=status.HTTP_401_UNAUTHORIZED)

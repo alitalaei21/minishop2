@@ -12,7 +12,9 @@ from users.sender import send_otp
 
 # Create your models here.
 class User(AbstractUser):
-    pass
+    email = models.EmailField(unique=True)
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']
 class OtpRequestQuerySet(models.QuerySet):
     def is_valid(self,receiver,password,request):
         current_time = timezone.now()
