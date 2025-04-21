@@ -120,8 +120,15 @@ class ProductFilterListApi(generics.ListAPIView):
 
         return filtered_products
 
+class ProductCategoryFilterListApi(generics.ListAPIView):
+    serializer_class = ProductSerializer
 
-
+    def get_queryset(self):
+        queryset = Product.objects.all()
+        category_name = self.request.query_params.getlist('category_name')
+        if category_name:
+            queryset = queryset.filter(category__name__icontains=category_name)
+        return queryset
 
 
 
