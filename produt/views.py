@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, status, generics
@@ -152,12 +153,17 @@ class ProductSearchApi(generics.ListAPIView):
     def get_queryset(self):
         queryset = Product.objects.all()
         search = self.request.query_params.get('search')
+        cache_key  = f"search:{search}"if search else "search:all"
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return cached_data
         if search:
             queryset = queryset.filter(
                 Q(name__icontains=search) |
                 Q(title__icontains=search) |
                 Q(description__icontains=search)
             )
+        cache.set(cache_key, queryset, timeout=3600)
         return queryset
 
 
