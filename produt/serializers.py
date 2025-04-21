@@ -2,20 +2,32 @@ from rest_framework import serializers
 
 from produt.models import Product, Category, OrderItem, Order, Baner
 from goldapi.goldapifun import get_gold_price
+import logging
+
+logger = logging.getLogger(__name__)
+
 class ProductSerializer(serializers.ModelSerializer):
     final_price = serializers.SerializerMethodField()
     class Meta:
         model = Product
         fields =('product_id','name','description','title','image','weight','labor_wage','stock','category','special_sale','discount','final_price')
-    def gold_api_price(self ):
+    def gold_api_price(self):
         try:
             response = get_gold_price()
+            if response is None or response == 0:
+                logger.warning("Could not get gold price, using default value")
+                return 0
             return float(response)
-        except:
+        except Exception as e:
+            logger.error(f"Error getting gold price in ProductSerializer: {str(e)}")
             return 0
     def get_final_price(self, obj):
         price_gold = self.gold_api_price()
-        gold_price = (price_gold * obj.weight) - obj.labor_wage
+        gold_price = (price_gold * obj.weight)
+        gold_price = gold_price + (gold_price * (obj.labor_wage / 100))
+        gold_price = gold_price + (gold_price * 0.09) #tax
+        gold_price = gold_price + (gold_price * 0.07) #profit
+
         if obj.discount > 0 :
             discount = gold_price * (obj.discount / 100)
             return int(gold_price - discount)

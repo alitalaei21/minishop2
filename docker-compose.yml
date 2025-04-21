@@ -38,21 +38,66 @@ services:
       DATABASE_NAME: ${DATABASE_NAME}
       DATABASE_USER: ${DATABASE_USER}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
-      DATABASE_HOST: ${DATABASE_HOST}
+      DATABASE_HOST: db
       DATABASE_PORT: ${DATABASE_PORT}
       REDIS_URL: "redis://redis:6379/0"
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
     env_file:
       - .env
-  goldprice-api:
-    build:
-      context: goldapi/gold-api-kt-backend
-      dockerfile: Dockerfile
-    container_name: goldprice-api
-    profiles:
-      - donotstart
+  celery-worker:
+    build: .
+    container_name: celery-worker
     restart: unless-stopped
     volumes:
-      - ./goldapi/goldapi-kt-backend/price_data:/app/price_data
+      - .:/app
+    depends_on:
+      - db
+      - redis
+      - django
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      DEBUG: ${DEBUG}
+      DJANGO_LOGLEVEL: ${DJANGO_LOGLEVEL}
+      DATABASE_ENGINE: ${DATABASE_ENGINE}
+      DATABASE_NAME: ${DATABASE_NAME}
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_HOST: db
+      DATABASE_PORT: ${DATABASE_PORT}
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
+    env_file:
+      - .env
+    entrypoint: ["/app/celery-entrypoint.sh"]
+    command: celery -A minishop worker -l info
+  celery-beat:
+    build: .
+    container_name: celery-beat
+    restart: unless-stopped
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+      - redis
+      - django
+      - celery-worker
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      DEBUG: ${DEBUG}
+      DJANGO_LOGLEVEL: ${DJANGO_LOGLEVEL}
+      DATABASE_ENGINE: ${DATABASE_ENGINE}
+      DATABASE_NAME: ${DATABASE_NAME}
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_HOST: db
+      DATABASE_PORT: ${DATABASE_PORT}
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
+    env_file:
+      - .env
+    entrypoint: ["/app/celery-beat-entrypoint.sh"]
+    command: celery -A minishop beat -l info
 
 
 volumes:
