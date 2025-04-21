@@ -4,7 +4,7 @@ from produt.models import CartItem
 from produt.views import Page, CategoryListApi, CategoryCreateApi, CategoryDetailView, CategoryDetailApiView, \
     ProductCreateApi, ProductDetailView, ProductListApi, ProductDetailApiView, OrderItemListCreateView, \
     OrderItemDetailView, OrderListCreateView, OrderDetailView, SpecialSaleView, BanerviewListApi, BanerCreateApi, \
-    BanerDetailView, ProductFilterListApi, ProductCategoryFilterListApi, CartView
+    BanerDetailView, ProductFilterListApi, ProductCategoryFilterListApi, CartView, ProductSearchApi
 
 urlpatterns = [
     path('', Page.as_view(), name='page'),
@@ -27,6 +27,7 @@ urlpatterns = [
     path('filter/',ProductFilterListApi.as_view(), name='filter-product-list'),
     path('filter/category/',ProductCategoryFilterListApi.as_view(), name='filter-product-category-list'),
     path('cart/', CartView.as_view(), name='cart'),
+    path('search/', ProductSearchApi.as_view(), name='cart'),
 
 
 ]

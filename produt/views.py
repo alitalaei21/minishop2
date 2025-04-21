@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, status, generics
 from rest_framework.decorators import permission_classes
@@ -145,7 +146,19 @@ class CartView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class ProductSearchApi(generics.ListAPIView):
+    serializer_class = ProductSerializer
 
+    def get_queryset(self):
+        queryset = Product.objects.all()
+        search = self.request.query_params.get('search')
+        if search:
+            queryset = queryset.filter(
+                Q(name__icontains=search) |
+                Q(title__icontains=search) |
+                Q(description__icontains=search)
+            )
+        return queryset
 
 
 
