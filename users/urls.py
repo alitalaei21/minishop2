@@ -1,6 +1,6 @@
 from django.urls import path
 
-from users.views import OtpView, LoginView, EmailSingupView, EmailLoginView, TokenRefreshView, LogoutView
+from users.views import OtpView, LoginView, EmailSingupView, EmailLoginView, TokenRefreshView, LogoutView, AuthStatusView
 
 urlpatterns = [
     path('singup', OtpView.as_view()),
