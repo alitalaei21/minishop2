@@ -19,14 +19,20 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 class Product(models.Model):
+    name = models.CharField(max_length=100)
     product_id = models.AutoField(primary_key=True)
+    def __str__(self):
+        return str(self.product_id)
+class ProductSizeColer(models.Model):
     seller = models.ForeignKey(
         User, related_name="user_product", on_delete=models.CASCADE
     )
-    name = models.CharField(max_length=100)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
     description = models.TextField()
     title = models.CharField(max_length=100)
     image = models.ImageField(upload_to=product_image_path)
+    size = models.IntegerField()
+    color = models.TextField(default='gold')
     # price = models.FloatField()
     weight = models.FloatField()
     labor_wage = models.FloatField()
@@ -41,7 +47,10 @@ class Product(models.Model):
     #         return self.price * (1-self.discount/100)
     #     return self.price
     def __str__(self):
-        return self.name
+        return self.product.name
+
+    class Meta:
+        unique_together = ('product', 'size', 'color')
 
 
 

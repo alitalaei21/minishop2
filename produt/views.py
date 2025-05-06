@@ -8,7 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from produt.models import Category, Product, OrderItem, Order, Baner, Cart
+from produt.models import Category, OrderItem, Order, Baner, Cart, ProductSizeColer
 from produt.permissions import ModelViewSetsPermission, IsOwnerAuth
 from produt.serializers import CategorySerializer, ProductSerializer, OrderItemSerializer, OrderSerializer, \
     BanerSerializer, CartSerializer, CartItemSerializer
@@ -40,22 +40,22 @@ class CategoryDetailApiView(APIView):
 
 
 class ProductListApi(generics.ListAPIView):
-    queryset = Product.objects.all()
+    queryset = ProductSizeColer.objects.all()
     serializer_class = ProductSerializer
     permission_classes = (ModelViewSetsPermission,)
 class ProductCreateApi(generics.CreateAPIView):
-    queryset = Product.objects.all()
+    queryset = ProductSizeColer.objects.all()
     serializer_class = ProductSerializer
     permission_classes = (IsOwnerAuth,)
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Product.objects.all()
+    queryset = ProductSizeColer.objects.all()
     serializer_class = ProductSerializer
     permission_classes = (IsOwnerAuth,)
 
 class ProductDetailApiView(APIView):
     def get(self, request, pk):
         try:
-            category = Product.objects.get(pk=pk)
+            category = ProductSizeColer.objects.get(pk=pk)
             serializer = ProductSerializer(category)
             return Response(serializer.data)
         except Category.DoesNotExist:
@@ -82,7 +82,7 @@ class OrderDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 class SpecialSaleView(APIView):
     def get(self, request, pk):
-        products = Product.objects.filter(special_sale=True)
+        products = ProductSizeColer.objects.filter(special_sale=True)
         serializer_class = ProductSerializer(products,many=True)
         return Response(serializer_class.data)
 class BanerviewListApi(generics.ListAPIView):
@@ -103,7 +103,7 @@ class ProductFilterListApi(generics.ListAPIView):
     serializer_class = ProductSerializer
 
     def get_queryset(self):
-        queryset = Product.objects.all()
+        queryset = ProductSizeColer.objects.all()
         min_price = self.request.query_params.get('min_price')
         max_price = self.request.query_params.get('max_price')
 
@@ -126,7 +126,7 @@ class ProductCategoryFilterListApi(generics.ListAPIView):
     serializer_class = ProductSerializer
 
     def get_queryset(self):
-        queryset = Product.objects.all()
+        queryset = ProductSizeColer.objects.all()
         category_name = self.request.query_params.getlist('category_name')
         if category_name:
             queryset = queryset.filter(category__name__icontains=category_name)
@@ -151,7 +151,7 @@ class ProductSearchApi(generics.ListAPIView):
     serializer_class = ProductSerializer
 
     def get_queryset(self):
-        queryset = Product.objects.all()
+        queryset = ProductSizeColer.objects.all()
         search = self.request.query_params.get('search')
         cache_key  = f"search:{search}"if search else "search:all"
         cached_data = cache.get(cache_key)

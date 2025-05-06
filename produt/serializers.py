@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from produt.models import Product, Category, OrderItem, Order, Baner, CartItem, Cart
+from produt.models import Category, OrderItem, Order, Baner, CartItem, Cart, ProductSizeColer
 from goldapi.goldapifun import get_gold_price
 import logging
 
@@ -9,8 +9,8 @@ logger = logging.getLogger(__name__)
 class ProductSerializer(serializers.ModelSerializer):
     final_price = serializers.SerializerMethodField()
     class Meta:
-        model = Product
-        fields =('product_id','name','description','title','image','weight','labor_wage','stock','category','special_sale','discount','final_price')
+        model = ProductSizeColer
+        fields = '__all__'
     def gold_api_price(self):
         try:
             response = get_gold_price()
