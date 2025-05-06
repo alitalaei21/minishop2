@@ -200,19 +200,10 @@ class LogoutView(APIView):
         response.delete_cookie(
             key='refresh_token',
             samesite='Lax',
-            secure=False  # Set to True in production with HTTPS
+            secure=False #TODO: set to true in production with HTTPS
         )
 
-        # Try to blacklist the token if it exists in the cookie
         refresh_token = request.COOKIES.get('refresh_token')
-        if refresh_token:
-            try:
-                # Blacklist the token
-                RefreshToken(refresh_token).blacklist()
-            except Exception:
-                # Token was already invalid or blacklisting failed
-                pass
-
         return response
 
 
