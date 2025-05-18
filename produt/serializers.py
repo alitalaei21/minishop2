@@ -1,16 +1,28 @@
 from rest_framework import serializers
 
-from produt.models import Category, OrderItem, Order, Baner, CartItem, Cart, ProductSizeColer
+from produt.models import Category, OrderItem, Order, Baner, CartItem, Cart, ProductSizeColer, ProductLike , Comment
 from goldapi.goldapifun import get_gold_price
 import logging
 
 logger = logging.getLogger(__name__)
+class CommentSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField(read_only=True)
+
+    class Meta:
+        model = Comment
+        fields = ['id', 'user', 'product', 'comment', 'created_at']
+        read_only_fields = ['user', 'created_at']
 
 class ProductSerializer(serializers.ModelSerializer):
     final_price = serializers.SerializerMethodField()
+    like_count = serializers.SerializerMethodField()
+    comments = CommentSerializer(many=True, read_only=True)
     class Meta:
         model = ProductSizeColer
         fields = '__all__'
+
+    def get_like_count(self, obj):
+        return obj.likes.count()
     def gold_api_price(self):
         try:
             response = get_gold_price()
@@ -91,3 +103,9 @@ class CartSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cart
         fields = ['id', 'created_at', 'items']
+
+class ProductLikeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductLike
+        fields = ['id', 'product', 'created']
+

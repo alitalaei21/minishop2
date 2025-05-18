@@ -1,17 +1,17 @@
 from django.core.cache import cache
 from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets, status, generics
+from rest_framework import viewsets, status, generics, permissions
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from produt.models import Category, OrderItem, Order, Baner, Cart, ProductSizeColer
+from produt.models import Category, OrderItem, Order, Baner, Cart, ProductSizeColer, ProductLike , Comment
 from produt.permissions import ModelViewSetsPermission, IsOwnerAuth
 from produt.serializers import CategorySerializer, ProductSerializer, OrderItemSerializer, OrderSerializer, \
-    BanerSerializer, CartSerializer, CartItemSerializer
+    BanerSerializer, CartSerializer, CartItemSerializer, CommentSerializer
 
 
 # Create your views here.
@@ -170,9 +170,29 @@ class ProductSearchApi(generics.ListAPIView):
 
 
 
+class ProductLikeToggleView(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        product = ProductSizeColer.objects.filter(pk=pk).first()
+        if not product:
+            return Response({"detail": "محصول پیدا نشد."}, status=status.HTTP_404_NOT_FOUND)
+        like_obj,create = ProductLike.objects.get_or_create(user=request.user, product=product)
+        if not create:
+            like_obj.delete()
+            return Response({"detail": "لایک حذف شد."}, status=status.HTTP_200_OK)
+        return Response({"detail": "محصول لایک شد."}, status=status.HTTP_201_CREATED)
 
+class ProductCommentListCreateView(generics.ListCreateAPIView):
+    serializer_class = CommentSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
+    def get_queryset(self):
+        product_id = self.kwargs['product_id']
+        return Comment.objects.filter(product_id=product_id).order_by('-created_at')
 
+    def perform_create(self, serializer):
+        product_id = self.kwargs['product_id']
+        serializer.save(user=self.request.user, product_id=product_id)
 
 
 
