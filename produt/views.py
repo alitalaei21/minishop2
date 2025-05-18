@@ -172,7 +172,7 @@ class ProductSearchApi(generics.ListAPIView):
 
 class ProductLikeToggleView(APIView):
     permission_classes = [IsAuthenticated]
-    def post(self, request):
+    def post(self, request,pk):
         product = ProductSizeColer.objects.filter(pk=pk).first()
         if not product:
             return Response({"detail": "محصول پیدا نشد."}, status=status.HTTP_404_NOT_FOUND)
