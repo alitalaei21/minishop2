@@ -11,7 +11,7 @@ from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 
 from users import serializers
 from users.models import OtpRequest
-from users.serializers import ChangePasswordSerializer,EmailSignupSerializer
+from users.serializers import ChangePasswordSerializer, SendSignupOtpSerializer, VerifyOtpSerializer
 
 
 # Create your views here.
@@ -123,26 +123,26 @@ class ChangePasswordView(APIView):
             return Response({"message": "رمز عبور با موفقیت تغییر یافت"})
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class EmailSingupView(APIView):
-    def post(self, request):
-        serializers = EmailSignupSerializer(data=request.data)
-        if serializers.is_valid():
-            serializers.save()
-            return Response({'message': 'ثبت‌نام با موفقیت انجام شد'})
-        return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class EmailLoginView(APIView):
+class SendOtpView(APIView):
     def post(self, request):
-        email = request.data.get('email')
-        password = request.data.get('password')
-        user = authenticate(request,username=email,password=password)
-        if user is not None:
-            refresh = RefreshToken.for_user(user)
+        serializer = SendSignupOtpSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': 'کد تأیید به ایمیل ارسال شد (در ترمینال قابل مشاهده است)'})
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class VerifyOtpView(APIView):
+    def post(self, request):
+        serializer = VerifyOtpSerializer(data=request.data)
+        if serializer.is_valid():
+            data = serializer.save()
             return Response({
-                'refresh': str(refresh),
-                'access': str(refresh.access_token)
+                'access': data['access'],
+                'refresh': data['refresh'],
+                'user_created': data['user_created'],
             })
-        return Response({'error': 'اطلاعات نامعتبر'}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class TokenRefreshView(APIView):
     """

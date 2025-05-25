@@ -109,8 +109,8 @@ class Comment(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.product.name}"
 class ProductLike(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE,related_name='product-likes')
-    user = models.ForeignKey(User, on_delete=models.CASCADE,related_name='user-likes')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE,related_name='product_likes')
+    user = models.ForeignKey(User, on_delete=models.CASCADE,related_name='user_likes')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

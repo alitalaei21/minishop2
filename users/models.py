@@ -12,9 +12,7 @@ from users.sender import send_otp
 
 # Create your models here.
 class User(AbstractUser):
-    email = models.EmailField(unique=True)
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
+    pass
 class OtpRequestQuerySet(models.QuerySet):
     def is_valid(self,receiver,password,request):
         current_time = timezone.now()
@@ -58,3 +56,16 @@ class OtpRequest(models.Model):
     password = models.CharField(max_length=4,default=Generateotp)
     created = models.DateTimeField(auto_now_add=True)
     objects = OtpManager()
+
+
+class EmailOtpRequest(models.Model):
+    email = models.EmailField()
+    code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def is_valid(self):
+        return (timezone.now() - self.created_at).seconds < 300  # اعتبار 5 دقیقه‌ای
+
+    @staticmethod
+    def generate_code():
+        return str(random.randint(100000, 999999))

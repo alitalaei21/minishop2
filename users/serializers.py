@@ -2,7 +2,8 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from users.models import OtpRequest, User
+from users.models import OtpRequest, User, EmailOtpRequest
+
 User = get_user_model()
 
 class RequestOtpSerializer(serializers.Serializer):
@@ -74,20 +75,54 @@ class LogoutSerializer(serializers.Serializer):
     pass
 
 
-class EmailSignupSerializer(serializers.Serializer):
+class SendSignupOtpSerializer(serializers.Serializer):
     email = serializers.EmailField()
-    username = serializers.CharField()
-    password = serializers.CharField(write_only=True)
-
-    def validate_email(self, value):
-        if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("این ایمیل قبلاً ثبت شده است.")
-        return value
+    password = serializers.CharField(min_length=6)
 
     def create(self, validated_data):
-        user = User.objects.create_user(
-            username=validated_data['username'],
-            email=validated_data['email'],
-            password=validated_data['password']
-        )
-        return user
+        email = validated_data['email']
+        code = EmailOtpRequest.generate_code()
+        EmailOtpRequest.objects.create(email=email, code=code)
+
+        print(f"[DEBUG] OTP for {email}: {code}")  # 👈 چاپ در ترمینال
+
+        return validated_data
+
+
+
+
+
+class VerifyOtpSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    code = serializers.CharField(max_length=6)
+    password = serializers.CharField()
+
+    def validate(self, data):
+        email = data['email']
+        code = data['code']
+
+        try:
+            otp = EmailOtpRequest.objects.filter(email=email, code=code).latest('created_at')
+        except EmailOtpRequest.DoesNotExist:
+            raise serializers.ValidationError("کد نادرست است")
+
+        if not otp.is_valid():
+            raise serializers.ValidationError("کد منقضی شده است")
+
+        data['otp'] = otp
+        return data
+
+    def create(self, validated_data):
+        email = validated_data['email']
+        password = validated_data['password']
+
+        user, created = User.objects.get_or_create(email=email, defaults={'username': email})
+        user.set_password(password)
+        user.save()
+
+        refresh = RefreshToken.for_user(user)
+        return {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+            'user_created': created
+        }
