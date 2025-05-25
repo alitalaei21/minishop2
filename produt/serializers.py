@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from produt.models import Category, OrderItem, Order, Baner, CartItem, Cart, ProductSizeColer, ProductLike , Comment
+from produt.models import Category, OrderItem, Order, Baner, CartItem, Cart, ProductSizeColer, ProductLike, Comment, \
+    Address
 from goldapi.goldapifun import get_gold_price
 import logging
 
@@ -108,4 +109,46 @@ class ProductLikeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductLike
         fields = ['id', 'product', 'created']
+
+class AddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Address
+        fields = '__all__'
+        read_only_fields = ['user']
+
+    def validate(self, attrs):
+        user = self.context['request'].user
+        if Address.objects.filter(user=user).count() >= 10:
+            raise serializers.ValidationError("شما نمی‌توانید بیش از ۱۰ آدرس ثبت کنید.")
+        return attrs
+    def create(self, validated_data):
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

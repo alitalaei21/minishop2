@@ -8,10 +8,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from produt.models import Category, OrderItem, Order, Baner, Cart, ProductSizeColer, ProductLike , Comment
+from produt.models import Category, OrderItem, Order, Baner, Cart, ProductSizeColer, ProductLike, Comment, Address
 from produt.permissions import ModelViewSetsPermission, IsOwnerAuth
 from produt.serializers import CategorySerializer, ProductSerializer, OrderItemSerializer, OrderSerializer, \
-    BanerSerializer, CartSerializer, CartItemSerializer, CommentSerializer
+    BanerSerializer, CartSerializer, CartItemSerializer, CommentSerializer, AddressSerializer
 
 
 # Create your views here.
@@ -196,7 +196,20 @@ class ProductCommentListCreateView(generics.ListCreateAPIView):
 
 
 
+class AddressApiView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        serializer = AddressSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class AddressDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = AddressSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
+    def get_queryset(self):
+        return Address.objects.filter(user=self.request.user)
 
 
 
