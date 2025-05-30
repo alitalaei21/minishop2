@@ -8,7 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from produt.models import Category, OrderItem, Order, Baner, Cart, ProductSizeColer, ProductLike, Comment, Address
+from produt.models import Category, OrderItem, Order, Baner, Cart, Like, Comment, Address, Product
 from produt.permissions import ModelViewSetsPermission, IsOwnerAuth
 from produt.serializers import CategorySerializer, ProductSerializer, OrderItemSerializer, OrderSerializer, \
     BanerSerializer, CartSerializer, CartItemSerializer, CommentSerializer, AddressSerializer
@@ -40,22 +40,22 @@ class CategoryDetailApiView(APIView):
 
 
 class ProductListApi(generics.ListAPIView):
-    queryset = ProductSizeColer.objects.all()
+    queryset =  Product.objects.all().prefetch_related('variants__size_coler', 'images')
     serializer_class = ProductSerializer
     permission_classes = (ModelViewSetsPermission,)
 class ProductCreateApi(generics.CreateAPIView):
-    queryset = ProductSizeColer.objects.all()
+    queryset = Product.objects.prefetch_related('variants__size_coler', 'images')
     serializer_class = ProductSerializer
     permission_classes = (IsOwnerAuth,)
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = ProductSizeColer.objects.all()
+    queryset = Product.objects.prefetch_related('variants__size_coler', 'images')
     serializer_class = ProductSerializer
     permission_classes = (IsOwnerAuth,)
 
 class ProductDetailApiView(APIView):
     def get(self, request, pk):
         try:
-            category = ProductSizeColer.objects.get(pk=pk)
+            category = Product.objects.prefetch_related('variants__size_color','images').all()
             serializer = ProductSerializer(category)
             return Response(serializer.data)
         except Category.DoesNotExist:
@@ -82,7 +82,7 @@ class OrderDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 class SpecialSaleView(APIView):
     def get(self, request, pk):
-        products = ProductSizeColer.objects.filter(special_sale=True)
+        products = Product.objects.filter(special_sale=True)
         serializer_class = ProductSerializer(products,many=True)
         return Response(serializer_class.data)
 class BanerviewListApi(generics.ListAPIView):
@@ -103,7 +103,7 @@ class ProductFilterListApi(generics.ListAPIView):
     serializer_class = ProductSerializer
 
     def get_queryset(self):
-        queryset = ProductSizeColer.objects.all()
+        queryset = Product.objects.all()
         min_price = self.request.query_params.get('min_price')
         max_price = self.request.query_params.get('max_price')
 
@@ -126,7 +126,7 @@ class ProductCategoryFilterListApi(generics.ListAPIView):
     serializer_class = ProductSerializer
 
     def get_queryset(self):
-        queryset = ProductSizeColer.objects.all()
+        queryset = Product.objects.all()
         category_name = self.request.query_params.getlist('category_name')
         if category_name:
             queryset = queryset.filter(category__name__icontains=category_name)
@@ -151,7 +151,7 @@ class ProductSearchApi(generics.ListAPIView):
     serializer_class = ProductSerializer
 
     def get_queryset(self):
-        queryset = ProductSizeColer.objects.all()
+        queryset = Product.objects.all()
         search = self.request.query_params.get('search')
         cache_key  = f"search:{search}"if search else "search:all"
         cached_data = cache.get(cache_key)
@@ -172,15 +172,14 @@ class ProductSearchApi(generics.ListAPIView):
 
 class ProductLikeToggleView(APIView):
     permission_classes = [IsAuthenticated]
-    def post(self, request,pk):
-        product = ProductSizeColer.objects.filter(pk=pk).first()
-        if not product:
-            return Response({"detail": "محصول پیدا نشد."}, status=status.HTTP_404_NOT_FOUND)
-        like_obj,create = ProductLike.objects.get_or_create(user=request.user, product=product)
-        if not create:
-            like_obj.delete()
-            return Response({"detail": "لایک حذف شد."}, status=status.HTTP_200_OK)
-        return Response({"detail": "محصول لایک شد."}, status=status.HTTP_201_CREATED)
+
+    def post(self, request, pk):
+        product = Product.objects.get(pk=pk)
+        like, created = Like.objects.get_or_create(user=request.user, product=product)
+        if not created:
+            like.delete()
+            return Response({'message': 'Unliked'}, status=status.HTTP_200_OK)
+        return Response({'message': 'Liked'}, status=status.HTTP_201_CREATED)
 
 class ProductCommentListCreateView(generics.ListCreateAPIView):
     serializer_class = CommentSerializer

@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
-from produt.models import Category, OrderItem, Order, Baner, CartItem, Cart, ProductSizeColer, ProductLike, Comment, \
-    Address
+from produt.models import Category, OrderItem, Order, Baner, CartItem, Cart, Like, Comment, \
+    Address, Product, ProductImage, ProductVariant, SizeColer
 from goldapi.goldapifun import get_gold_price
 import logging
 
@@ -13,16 +13,35 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = ['id', 'user', 'product', 'comment', 'created_at']
         read_only_fields = ['user', 'created_at']
+class ProductImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductImage
+        fields = ['id', 'image']
+class SizeColorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SizeColer
+        fields = ['id', 'size', 'coler']
+
+class ProductVariantSerializer(serializers.ModelSerializer):
+    size_coler = SizeColorSerializer()
+
+    class Meta:
+        model = ProductVariant
+        fields = ['id', 'size_coler', 'weight', 'stock']
+
 
 class ProductSerializer(serializers.ModelSerializer):
+    variants = ProductVariantSerializer(many=True, read_only=True)
+    images = ProductImageSerializer(many=True, read_only=True)
     final_price = serializers.SerializerMethodField()
-    like_count = serializers.SerializerMethodField()
+    likes_count = serializers.SerializerMethodField()
     comments = CommentSerializer(many=True, read_only=True)
+    images = ProductImageSerializer(many=True, read_only=True)
     class Meta:
-        model = ProductSizeColer
+        model = Product
         fields = '__all__'
 
-    def get_like_count(self, obj):
+    def get_likes_count(self, obj):
         return obj.likes.count()
     def gold_api_price(self):
         try:
@@ -107,7 +126,7 @@ class CartSerializer(serializers.ModelSerializer):
 
 class ProductLikeSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ProductLike
+        model = Like
         fields = ['id', 'product', 'created']
 
 class AddressSerializer(serializers.ModelSerializer):

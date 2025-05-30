@@ -18,42 +18,51 @@ class Category(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     def __str__(self):
         return self.name
+
+# models.py
+
+class SizeColer(models.Model):
+    size = models.IntegerField()
+    coler = models.CharField(max_length=50)
+
+    def __str__(self):
+        return f"{self.size} - {self.coler}"
+
 class Product(models.Model):
     name = models.CharField(max_length=100)
     product_id = models.AutoField(primary_key=True)
-    def __str__(self):
-        return str(self.product_id)
-class ProductSizeColer(models.Model):
-    seller = models.ForeignKey(
-        User, related_name="user_product", on_delete=models.CASCADE
-    )
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
     description = models.TextField()
     title = models.CharField(max_length=100)
     image = models.ImageField(upload_to=product_image_path)
-    size = models.IntegerField()
-    color = models.TextField(default='gold')
-    # price = models.FloatField()
     weight = models.FloatField()
     labor_wage = models.FloatField()
     stock = models.IntegerField(default=0)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE,related_name='products')
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
     special_sale = models.BooleanField(default=False)
     discount = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     uploaded_at = models.DateTimeField(auto_now=True)
-    # def discount_price(self):
-    #     if(self.discount > 0):
-    #         return self.price * (1-self.discount/100)
-    #     return self.price
     def __str__(self):
-        return self.product.name
+        return self.name
+
+class ProductVariant(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variants')
+    size_coler = models.ForeignKey(SizeColer, on_delete=models.CASCADE)
+    weight = models.FloatField()
+    stock = models.IntegerField(default=0)
 
     class Meta:
-        unique_together = ('product', 'size', 'color')
+        unique_together = ('product', 'size_coler')
 
+    def __str__(self):
+        return f"{self.product.name} - {self.size_coler}"
 
+class ProductImage(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='product_images/')
 
+    def __str__(self):
+        return f"Image of {self.product.name}"
 
 class Order(models.Model):
     PENDING_STATE = "p"
@@ -108,8 +117,8 @@ class Comment(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.product.name}"
-class ProductLike(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE,related_name='product_likes')
+class Like(models.Model):
+    product = models.ForeignKey('Product', on_delete=models.CASCADE, related_name='likes')
     user = models.ForeignKey(User, on_delete=models.CASCADE,related_name='user_likes')
     created_at = models.DateTimeField(auto_now_add=True)
 
