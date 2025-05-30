@@ -29,6 +29,22 @@ class ProductVariantSerializer(serializers.ModelSerializer):
         model = ProductVariant
         fields = ['id', 'size_coler', 'weight', 'stock']
 
+    def create(self, validated_data):
+        size_coler_data = validated_data.pop('size_coler')
+        size_coler, created = SizeColer.objects.get_or_create(**size_coler_data)
+        variant = ProductVariant.objects.create(size_coler=size_coler, **validated_data)
+        return variant
+
+    def update(self, instance, validated_data):
+        size_coler_data = validated_data.pop('size_coler', None)
+        if size_coler_data:
+            size_coler, created = SizeColer.objects.get_or_create(**size_coler_data)
+            instance.size_coler = size_coler
+        instance.weight = validated_data.get('weight', instance.weight)
+        instance.stock = validated_data.get('stock', instance.stock)
+        instance.save()
+        return instance
+
 
 class ProductSerializer(serializers.ModelSerializer):
     variants = ProductVariantSerializer(many=True, read_only=True)
@@ -40,7 +56,43 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = '__all__'
+    def create(self, validated_data):
+        variants_data = validated_data.pop('variants')
+        images_data = validated_data.pop('images', [])
+        product = Product.objects.create(**validated_data)
 
+        for variant_data in variants_data:
+            size_coler_data = variant_data.pop('size_coler')
+            size_coler, created = SizeColer.objects.get_or_create(**size_coler_data)
+            ProductVariant.objects.create(product=product, size_coler=size_coler, **variant_data)
+
+        for image_data in images_data:
+            ProductImage.objects.create(product=product, **image_data)
+
+        return product
+
+    def update(self, instance, validated_data):
+        variants_data = validated_data.pop('variants', None)
+        images_data = validated_data.pop('images', None)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        if variants_data is not None:
+
+            instance.variants.all().delete()
+            for variant_data in variants_data:
+                size_coler_data = variant_data.pop('size_coler')
+                size_coler, created = SizeColer.objects.get_or_create(**size_coler_data)
+                ProductVariant.objects.create(product=instance, size_coler=size_coler, **variant_data)
+
+        if images_data is not None:
+            instance.images.all().delete()
+            for image_data in images_data:
+                ProductImage.objects.create(product=instance, **image_data)
+
+        return instance
     def get_likes_count(self, obj):
         return obj.likes.count()
     def gold_api_price(self):
