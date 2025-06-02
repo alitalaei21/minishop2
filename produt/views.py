@@ -43,6 +43,7 @@ class ProductListApi(generics.ListAPIView):
     queryset =  Product.objects.all().prefetch_related('variants__size_coler', 'images')
     serializer_class = ProductSerializer
     permission_classes = (ModelViewSetsPermission,)
+    pagination_class = None
 class ProductCreateApi(generics.CreateAPIView):
     queryset = Product.objects.prefetch_related('variants__size_coler', 'images')
     serializer_class = ProductSerializer

@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -29,6 +30,10 @@ class ObtainTokenSerializer(serializers.Serializer):
     user = ProfileSerializer(read_only=True)
 class SetPasswordSerializer(serializers.Serializer):
     password = serializers.CharField(allow_null=False)
+
+    def validate_new_password(self, value):
+        validate_password(value)
+        return value
     def validate_password(self, value):
         return value
     def save(self, **kwargs):
@@ -43,6 +48,9 @@ class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
 
+    def validate_new_password(self, value):
+        validate_password(value)
+        return value
     def validate_old_password(self, value):
         user = self.context['request'].user
         if not user.check_password(value):

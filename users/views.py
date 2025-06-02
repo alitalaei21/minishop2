@@ -16,7 +16,11 @@ from users.serializers import ChangePasswordSerializer, SendSignupOtpSerializer,
 
 # Create your views here.
 class OtpView(APIView):
+    @ratelimit(key='post:receiver', rate='5/10m', method='POST', block=False)
     def post(self, request):
+        if getattr(request, 'limited', False):
+            return Response({"detail": "بیش از حد مجاز درخواست ارسال شد، لطفا بعدا تلاش کنید."},
+                            status=status.HTTP_429_TOO_MANY_REQUESTS)
         serializer = serializers.RequestOtpSerializer(data=request.query_params)
         if serializer.is_valid():
             data = serializer.validated_data
