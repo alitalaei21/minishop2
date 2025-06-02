@@ -210,6 +210,17 @@ class AddressDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         return Address.objects.filter(user=self.request.user)
 
+class ProductTag(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        tag_name = request.query_params.get('tag')
+        if tag_name:
+            products = Product.objects.filter(tags__name__iexact=tag_name)
+        else:
+            products = Product.objects.all()
+        serializer = ProductSerializer(products, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 
 

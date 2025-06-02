@@ -1,11 +1,16 @@
 from rest_framework import serializers
 
 from produt.models import Category, OrderItem, Order, Baner, CartItem, Cart, Like, Comment, \
-    Address, Product, ProductImage, ProductVariant, SizeColer
+    Address, Product, ProductImage, ProductVariant, SizeColer, Tag
 from goldapi.goldapifun import get_gold_price
 import logging
 
 logger = logging.getLogger(__name__)
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = '__all__'
+
 class CommentSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField(read_only=True)
 
@@ -47,6 +52,7 @@ class ProductVariantSerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
+    tags = TagSerializer(many=True, read_only=True)
     variants = ProductVariantSerializer(many=True, read_only=True)
     images = ProductImageSerializer(many=True, read_only=True)
     final_price = serializers.SerializerMethodField()

@@ -5,7 +5,7 @@ from produt.views import Page, CategoryListApi, CategoryCreateApi, CategoryDetai
     ProductCreateApi, ProductDetailView, ProductListApi, ProductDetailApiView, OrderItemListCreateView, \
     OrderItemDetailView, OrderListCreateView, OrderDetailView, SpecialSaleView, BanerviewListApi, BanerCreateApi, \
     BanerDetailView, ProductFilterListApi, ProductCategoryFilterListApi, CartView, ProductSearchApi, \
-    ProductLikeToggleView, ProductCommentListCreateView, AddressApiView, AddressDetailView
+    ProductLikeToggleView, ProductCommentListCreateView, AddressApiView, AddressDetailView, ProductTag
 
 urlpatterns = [
     path('', Page.as_view(), name='page'),
@@ -33,5 +33,7 @@ urlpatterns = [
     path('products/<int:product_id>/comments/', ProductCommentListCreateView.as_view(), name='product-comments'),
     path('addresses/', AddressApiView.as_view(), name='address-list'),
     path('addresses/<int:pk>/', AddressDetailView.as_view(), name='address-detail'),
+    path('products/tag/', ProductTag.as_view(), name='product-list-by-tag'),
+
 ]
 
