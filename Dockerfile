@@ -17,7 +17,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Upgrade pip and install Python dependencies
 RUN pip install --upgrade pip
 COPY requirements.txt /app/
-RUN pip install --no-cache-dir -r requirements.txt
+#todo bring back --no-cache-dir for production
+#todo --resume-retries added for development because of having bad internet only!
+RUN pip install --resume-retries 3 -r requirements.txt
 
 # Copy project files
 COPY . /app/

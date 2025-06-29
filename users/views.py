@@ -7,11 +7,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
+from django_ratelimit.decorators import ratelimit
 
 
 from users import serializers
 from users.models import OtpRequest
 from users.serializers import ChangePasswordSerializer, SendSignupOtpSerializer, VerifyOtpSerializer
+
 
 
 # Create your views here.

@@ -1,15 +1,18 @@
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.contrib.postgres.fields import ArrayField
 User = get_user_model()
 # Create your models here
 def category_image_path(instance, filename):
     return "category/icons/{}/{}".format(instance.name, filename)
 
 
-def product_image_path(instance, filename):
-    return "product/images/{}/{}".format(instance.title, filename)
+def variant_image_path(instance, filename):
+    return "product/variants/{}/{}/{}".format(instance.product.title, instance.size_color, filename)
+
 def banner_image_path(instance, filename):
     return "banner/images/{}/{}".format(instance.name, filename)
+
 class Category(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE,related_name='category')
     category_id = models.AutoField(primary_key=True)
@@ -19,32 +22,28 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
-# models.py
-class Tag(models.Model):
-    name = models.CharField(max_length=100)
-    def __str__(self):
-        return self.name
 
-class SizeColer(models.Model):
+class SizeColor(models.Model):
     size = models.IntegerField()
-    coler = models.CharField(max_length=50)
+    color = models.CharField(max_length=50)
 
     def __str__(self):
-        return f"{self.size} - {self.coler}"
+        return f"{self.size} - {self.color}"
 
 class Product(models.Model):
     name = models.CharField(max_length=100)
     product_id = models.AutoField(primary_key=True)
     description = models.TextField()
     title = models.CharField(max_length=100)
-    image = models.ImageField(upload_to=product_image_path)
-    weight = models.FloatField()
     labor_wage = models.FloatField()
-    stock = models.IntegerField(default=0)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
     special_sale = models.BooleanField(default=False)
-    discount = models.IntegerField(default=0)
-    tags = models.ManyToManyField(Tag, related_name='products',blank=True)
+    tags = ArrayField(
+        models.CharField(max_length=100),
+        blank=True,
+        default=list,
+        help_text="List of tags for this product"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     uploaded_at = models.DateTimeField(auto_now=True)
     def __str__(self):
@@ -52,22 +51,22 @@ class Product(models.Model):
 
 class ProductVariant(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variants')
-    size_coler = models.ForeignKey(SizeColer, on_delete=models.CASCADE)
+    size_color = models.ForeignKey(SizeColor, on_delete=models.CASCADE)
     weight = models.FloatField()
     stock = models.IntegerField(default=0)
+    discount = models.IntegerField(default=0)
+    images = ArrayField(
+        models.ImageField(upload_to=variant_image_path),
+        blank=True,
+        default=list,
+        help_text="Multiple images for this product variant"
+    )
 
     class Meta:
-        unique_together = ('product', 'size_coler')
+        unique_together = ('product', 'size_color')
 
     def __str__(self):
-        return f"{self.product.name} - {self.size_coler}"
-
-class ProductImage(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
-    image = models.ImageField(upload_to='product_images/')
-
-    def __str__(self):
-        return f"Image of {self.product.name}"
+        return f"{self.product.name} - {self.size_color}"
 
 class Order(models.Model):
     PENDING_STATE = "p"
@@ -136,7 +135,7 @@ class Address(models.Model):
     city = models.CharField(max_length=50)
     street = models.TextField()
     postal_code = models.CharField(max_length=20)
-    phone_number = models.CharField(max_length=15)
+    phone_number = models.CharField(max_length=30)
     is_default = models.BooleanField(default=False)
     created = models.DateTimeField(auto_now_add=True)
 

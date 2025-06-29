@@ -58,9 +58,11 @@ INSTALLED_APPS = [
     'drf_social_oauth2',
     'corsheaders',
     'django_ratelimit',
+    'debug_toolbar',
 ]
 
 MIDDLEWARE = [
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
@@ -181,7 +183,7 @@ REST_FRAMEWORK = {
 
     ),
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'DEFAULT_PAGINATION_CLASS': 'produt.pagination.CustomPagination',
     'PAGE_SIZE': 10,
 
 }
@@ -253,3 +255,15 @@ CORS_ALLOW_HEADERS = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+
+# Debug Toolbar Configuration
+INTERNAL_IPS = [
+    '127.0.0.1',
+    'localhost',
+]
+
+if DEBUG:
+    import socket
+    hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
+    INTERNAL_IPS += [ip[:-1] + '1' for ip in ips]
+    INTERNAL_IPS += ['172.17.0.1']  # Docker host IP
