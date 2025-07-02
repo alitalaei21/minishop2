@@ -114,22 +114,15 @@ DATABASES = {
 
 CACHES = {
     "default": {
-        "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": os.getenv("REDIS_URL"),
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": os.getenv("REDIS_URL", "redis://redis:6379/0"),
+        "OPTIONS": {
+            "COMPRESSOR": "django_redis.compressors.zlib.ZlibCompressor",
+            "COMPRESS_MIN_LEN": 10,  # Only compress if length > 10 bytes
+        }
     }
 }
 
-# from decouple import config
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": config("postgres"),
-#         "USER": config("postgres"),
-#         "PASSWORD": config("alitalaei21"),
-#         "HOST": config("127.0.0.1"),
-#         "PORT": config("5432", cast=int),
-#     }
-# }
 
 
 
@@ -221,9 +214,8 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
-CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutes
-
+CELERY_TASK_IGNORE_RESULT = True
 # Gold Price API Configuration
 GOLD_PRICE_PROVIDER = os.getenv('GOLD_PRICE_PROVIDER', 'tgju')  # Default provider
 GOLD_PRICE_MAX_AGE = int(os.getenv('GOLD_PRICE_MAX_AGE', 30 * 60 * 1000))  # Maximum age in milliseconds

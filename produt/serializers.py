@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.db import models
 
 from produt.models import Category, OrderItem, Order, Baner, CartItem, Cart, Like, Comment, \
-    Address, Product, ProductVariant, SizeColor
+    Address, Product, ProductVariant
 from goldapi.goldapifun import get_gold_price
 import logging
 
@@ -10,60 +10,41 @@ logger = logging.getLogger(__name__)
 
 class CommentSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField(read_only=True)
+    user_first_name = serializers.CharField(source='user.first_name', read_only=True)
+    user_last_name = serializers.CharField(source='user.last_name', read_only=True)
     created_at = serializers.SerializerMethodField()
 
     class Meta:
         model = Comment
-        fields = ['id', 'user', 'product', 'comment', 'created_at']
-        read_only_fields = ['user', 'created_at']
+        fields = ['id', 'user', 'user_first_name', 'user_last_name', 'product', 'comment', 'rating', 'created_at']
+        read_only_fields = ['user', 'user_first_name', 'user_last_name', 'created_at']
 
     def get_created_at(self, obj):
         return int(obj.created_at.timestamp() * 1000)
 
-class SizeColorSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = SizeColor
-        fields = ['id', 'size', 'color']
-
 class ProductVariantSerializer(serializers.ModelSerializer):
-    size = serializers.IntegerField(source='size_color.size')
-    color = serializers.CharField(source='size_color.color')
     raw_price = serializers.SerializerMethodField()
     final_price = serializers.SerializerMethodField()
     images = serializers.SerializerMethodField()
 
     class Meta:
         model = ProductVariant
-        fields = ['id', 'size', 'color', 'weight', 'stock', 'discount', 'raw_price', 'final_price', 'images']
+        fields = ['id', 'size', 'color', 'weight', 'stock', 'discount', 'special_sale', 'raw_price', 'final_price', 'images']
 
     def create(self, validated_data):
-        size_color_data = {
-            'size': validated_data.pop('size_color')['size'],
-            'color': validated_data.pop('size_color')['color']
-        }
         images = validated_data.pop('images', [])
-        size_color, created = SizeColor.objects.get_or_create(**size_color_data)
-        variant = ProductVariant.objects.create(size_color=size_color, **validated_data)
+        variant = ProductVariant.objects.create(**validated_data)
         if images:
             variant.images = images
             variant.save()
         return variant
 
     def update(self, instance, validated_data):
-        if 'size_color' in validated_data:
-            size_color_data = {
-                'size': validated_data.pop('size_color')['size'],
-                'color': validated_data.pop('size_color')['color']
-            }
-            size_color, created = SizeColor.objects.get_or_create(**size_color_data)
-            instance.size_color = size_color
-        
         if 'images' in validated_data:
             instance.images = validated_data.pop('images')
         
-        instance.weight = validated_data.get('weight', instance.weight)
-        instance.stock = validated_data.get('stock', instance.stock)
-        instance.discount = validated_data.get('discount', instance.discount)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
         instance.save()
         return instance
 
@@ -108,8 +89,7 @@ class ProductSerializer(serializers.ModelSerializer):
         child=serializers.CharField(max_length=100),
         required=False
     )
-    variants = ProductVariantSerializer(many=True)
-    comments = CommentSerializer(many=True, read_only=True)
+    variants = serializers.SerializerMethodField()
     category = serializers.StringRelatedField(read_only=True)
     created_at = serializers.SerializerMethodField()
     uploaded_at = serializers.SerializerMethodField()
@@ -117,19 +97,23 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ['product_id', 'name', 'description', 'title',
-                 'labor_wage', 'category', 'special_sale',
-                 'tags', 'variants', 'comments', 'created_at', 'uploaded_at']
+                 'labor_wage', 'category', 'tags', 'variants', 
+                 'created_at', 'uploaded_at']
         
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Only prefetch related data when we're dealing with a queryset
         if isinstance(self.instance, models.QuerySet):
             self.instance = self.instance.prefetch_related(
-                'variants',
-                'variants__size_color',
-                'comments',
-                'comments__user'
+                'variants'
             ).select_related('category')
+
+    def get_variants(self, obj):
+        variants = obj.variants.all()
+        # If special_sale_only is in context, filter variants
+        if self.context.get('special_sale_only'):
+            variants = variants.filter(special_sale=True)
+        return ProductVariantSerializer(variants, many=True, context=self.context).data
 
     def get_created_at(self, obj):
         return int(obj.created_at.timestamp() * 1000)
@@ -142,12 +126,9 @@ class ProductSerializer(serializers.ModelSerializer):
         product = Product.objects.create(**validated_data)
 
         for variant_data in variants_data:
-            size_color_data = variant_data.pop('size_color')
             images = variant_data.pop('images', [])
-            size_color, created = SizeColor.objects.get_or_create(**size_color_data)
             variant = ProductVariant.objects.create(
-                product=product, 
-                size_color=size_color, 
+                product=product,
                 **variant_data
             )
             if images:
@@ -172,12 +153,7 @@ class ProductSerializer(serializers.ModelSerializer):
                 if variant_id:
                     # Update existing variant
                     variant = instance.variants.get(id=variant_id)
-                    size_color_data = variant_data.pop('size_color', None)
                     images = variant_data.pop('images', None)
-                    
-                    if size_color_data:
-                        size_color, created = SizeColor.objects.get_or_create(**size_color_data)
-                        variant.size_color = size_color
                     
                     for attr, value in variant_data.items():
                         setattr(variant, attr, value)
@@ -189,12 +165,9 @@ class ProductSerializer(serializers.ModelSerializer):
                     updated_variants.append(variant.id)
                 else:
                     # Create new variant
-                    size_color_data = variant_data.pop('size_color')
                     images = variant_data.pop('images', [])
-                    size_color, created = SizeColor.objects.get_or_create(**size_color_data)
                     variant = ProductVariant.objects.create(
-                        product=instance, 
-                        size_color=size_color, 
+                        product=instance,
                         **variant_data
                     )
                     if images:
@@ -270,7 +243,7 @@ class CartSerializer(serializers.ModelSerializer):
         super().__init__(*args, **kwargs)
         if isinstance(self.instance, models.QuerySet):
             self.instance = self.instance.prefetch_related(
-                'items__product__variants__size_color',
+                'items__product__variants'
             ).select_related('user')
 
 class AddCartItemSerializer(serializers.Serializer):

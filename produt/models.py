@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
+from django.core.validators import MinValueValidator, MaxValueValidator
 User = get_user_model()
 # Create your models here
 def category_image_path(instance, filename):
@@ -8,7 +9,7 @@ def category_image_path(instance, filename):
 
 
 def variant_image_path(instance, filename):
-    return "product/variants/{}/{}/{}".format(instance.product.title, instance.size_color, filename)
+    return "product/variants/{}/{}-{}/{}".format(instance.product.title, instance.size, instance.color, filename)
 
 def banner_image_path(instance, filename):
     return "banner/images/{}/{}".format(instance.name, filename)
@@ -23,13 +24,6 @@ class Category(models.Model):
         return self.name
 
 
-class SizeColor(models.Model):
-    size = models.IntegerField()
-    color = models.CharField(max_length=50)
-
-    def __str__(self):
-        return f"{self.size} - {self.color}"
-
 class Product(models.Model):
     name = models.CharField(max_length=100)
     product_id = models.AutoField(primary_key=True)
@@ -37,7 +31,6 @@ class Product(models.Model):
     title = models.CharField(max_length=100)
     labor_wage = models.FloatField()
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
-    special_sale = models.BooleanField(default=False)
     tags = ArrayField(
         models.CharField(max_length=100),
         blank=True,
@@ -51,10 +44,12 @@ class Product(models.Model):
 
 class ProductVariant(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variants')
-    size_color = models.ForeignKey(SizeColor, on_delete=models.CASCADE)
+    size = models.IntegerField()
+    color = models.CharField(max_length=50)
     weight = models.FloatField()
     stock = models.IntegerField(default=0)
     discount = models.IntegerField(default=0)
+    special_sale = models.BooleanField(default=False)
     images = ArrayField(
         models.ImageField(upload_to=variant_image_path),
         blank=True,
@@ -63,10 +58,10 @@ class ProductVariant(models.Model):
     )
 
     class Meta:
-        unique_together = ('product', 'size_color')
+        unique_together = ('product', 'size', 'color')
 
     def __str__(self):
-        return f"{self.product.name} - {self.size_color}"
+        return f"{self.product.name} - Size {self.size} - {self.color}"
 
 class Order(models.Model):
     PENDING_STATE = "p"
@@ -98,7 +93,6 @@ class OrderItem(models.Model):
 class Baner(models.Model):
     name = models.CharField(max_length=100)
     image = models.ImageField(upload_to=banner_image_path)
-    silde = models.BooleanField(default=False)
     def __str__(self):
         return self.name
 
@@ -117,6 +111,14 @@ class Comment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE,related_name='comments')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     comment = models.TextField()
+    rating = models.IntegerField(
+        validators=[
+            MinValueValidator(1, message="Rating must be at least 1"),
+            MaxValueValidator(5, message="Rating cannot exceed 5")
+        ],
+        help_text="Rating from 1 to 5",
+        default=5
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
